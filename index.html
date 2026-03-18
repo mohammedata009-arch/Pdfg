@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام إدارة فواتير الاسبيرات | الاحترافي</title>
+<title>نظام إدارة فواتير الاسبيرات | الاحترافي المطور</title>
 
 <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -12,60 +12,46 @@
 
 <style>
 :root {
-    --primary: #2d3436;
-    --accent: #e67e22;
-    --success: #27ae60;
-    --danger: #d63031;
-    --light: #f5f6fa;
-    --blue: #0984e3;
+    --primary: #2d3436; --accent: #e67e22; --success: #27ae60;
+    --danger: #d63031; --light: #f5f6fa; --blue: #0984e3;
 }
 body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--light); margin: 0; padding: 20px; color: #2d3436; }
 
-/* تصميم الكارد الرئيسي */
-.app { max-width: 1200px; margin: auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 8px solid var(--accent); }
-
-/* الهيدر */
+.app { max-width: 1250px; margin: auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 8px solid var(--accent); }
 .header { background: var(--primary); color: #fff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
 #clock { font-weight: bold; color: var(--accent); font-size: 1.1em; }
 
-/* الإحصائيات */
 .stats { display: flex; gap: 15px; padding: 20px; background: #fff; }
-.stat { flex: 1; text-align: center; border: 1px solid #edf2f7; padding: 15px; border-radius: 15px; transition: 0.3s; }
-.stat:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+.stat { flex: 1; text-align: center; border: 1px solid #edf2f7; padding: 15px; border-radius: 15px; }
 .stat b { font-size: 1.8em; display: block; margin-top: 5px; }
 
-/* منطقة التحكم */
 .tools { padding: 20px; display: flex; flex-wrap: wrap; gap: 12px; background: #fafafa; border-bottom: 1px solid #eee; }
-input { padding: 12px; border-radius: 10px; border: 1.5px solid #dfe6e9; flex: 1; outline: none; transition: 0.3s; }
+input { padding: 12px; border-radius: 10px; border: 1.5px solid #dfe6e9; flex: 1; outline: none; }
 input:focus { border-color: var(--accent); }
 
-.btn { padding: 12px 25px; border: none; border-radius: 10px; color: #fff; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+.btn { padding: 12px 25px; border: none; border-radius: 10px; color: #fff; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
 .add { background: var(--accent); }
 .printall { background: var(--primary); }
-.btn:hover { opacity: 0.9; transform: scale(1.02); }
 
-/* الجدول */
 .table-container { padding: 10px 20px 30px; overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; min-width: 800px; }
-th { padding: 15px; background: #f8f9fa; color: #636e72; font-size: 0.9em; text-transform: uppercase; border-bottom: 2px solid #eee; text-align: right; }
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
+th { padding: 15px; background: #f8f9fa; color: #636e72; font-size: 0.9em; border-bottom: 2px solid #eee; text-align: right; }
 td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
-tr:hover { background: #f9f9ff; }
 
-/* الحالات */
+/* تمييز الحقول القابلة للتعديل */
+.editable { cursor: pointer; border-bottom: 1px dashed #ccc; transition: 0.2s; }
+.editable:hover { background: #fff9f4; color: var(--accent); }
+
 .status { padding: 6px 15px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: bold; display: inline-block; }
 .done { background: #e3faf3; color: var(--success); }
 .wait { background: #fff5eb; color: var(--accent); }
 
-/* أزرار التحكم الجانبية */
-.ctrl { padding: 8px; border: none; color: #fff; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; margin: 2px; }
-.ctrl:hover { transform: scale(1.1); }
+.ctrl { padding: 8px; border: none; color: #fff; border-radius: 8px; cursor: pointer; margin: 2px; }
 
-/* تنسيق الطباعة */
 @media print {
     .tools, .header, .stats, .ctrl, .status, th:last-child, td:last-child { display: none !important; }
     body { padding: 0; background: #fff; }
     .app { box-shadow: none; border: none; width: 100%; }
-    table { border: 1px solid #eee; }
     .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
 }
 .print-header { display: none; }
@@ -87,17 +73,19 @@ tr:hover { background: #f9f9ff; }
     </div>
 
     <div class="tools">
+        <input id="invNum" placeholder="رقم الفاتورة">
         <input id="client" placeholder="اسم العميل المستلم">
         <input id="note" placeholder="ملاحظات القطعة / الاسبير">
-        <button class="btn add" onclick="upload()"><i class="fas fa-plus-circle"></i> إضافة فاتورة</button>
+        <button class="btn add" onclick="upload()"><i class="fas fa-plus-circle"></i> إضافة ورفع</button>
 
-        <div style="flex-basis: 100%; height: 0; margin: 0;"></div> <input id="search" placeholder="بحث سريع في السجل..." onkeyup="search()">
+        <div style="flex-basis: 100%; height: 0; margin: 0;"></div> 
+        <input id="search" placeholder="بحث سريع في السجل..." onkeyup="search()">
         <button class="btn printall" onclick="window.print()"><i class="fas fa-print"></i> طباعة السجل بالكامل</button>
     </div>
 
     <div class="print-header">
         <h1>تقرير فواتير شركة الاسبيرات</h1>
-        <p>تاريخ استخراج التقرير: <span id="reportDate"></span></p>
+        <p>تاريخ التقرير: <span id="reportDate"></span></p>
     </div>
 
     <div class="table-container">
@@ -105,11 +93,12 @@ tr:hover { background: #f9f9ff; }
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>رقم الفاتورة</th>
                     <th>العميل</th>
                     <th>الملاحظات</th>
                     <th>الحالة</th>
                     <th>التاريخ</th>
-                    <th>خيارات الإدارة</th>
+                    <th>خيارات</th>
                 </tr>
             </thead>
             <tbody id="body"></tbody>
@@ -118,14 +107,12 @@ tr:hover { background: #f9f9ff; }
 </div>
 
 <script>
-// ======== إعدادات الأجهزة والوقت ========
 setInterval(() => {
     const now = new Date();
     document.getElementById('clock').innerText = now.toLocaleTimeString('ar-EG');
     document.getElementById('reportDate').innerText = now.toLocaleDateString('ar-EG');
 }, 1000);
 
-// ======== إعداد Firebase (ضع بياناتك هنا) ========
 const firebaseConfig = {
     apiKey: "AIzaSyBs3OTie7SSJzqWQKgOjUA91BkEZ1919IQ",
     authDomain: "pdfkk-33ecc.firebaseapp.com",
@@ -133,35 +120,32 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
-// ======== إعداد Filestack (ضع مفتاحك هنا) ========
 const stack = filestack.init("AnCRzgItUSXu9tSz5Apfjz");
 
-// ======== وظيفة الرفع ========
 function upload() {
+    let invNum = document.getElementById('invNum').value.trim();
     let name = document.getElementById('client').value.trim();
     let note = document.getElementById('note').value.trim();
-
-    if(!name) return alert("أدخل اسم العميل أولاً");
 
     stack.picker({
         accept: ['.pdf'],
         displayMode: 'overlay',
         onFileUploadFinished: async (file) => {
             await db.collection("inv").add({
-                name: name,
-                note: note,
+                invNum: invNum || "---",
+                name: name || "---",
+                note: note || "---",
                 url: file.url,
                 status: "wait",
                 created: firebase.firestore.FieldValue.serverTimestamp()
             });
+            document.getElementById('invNum').value = "";
             document.getElementById('client').value = "";
             document.getElementById('note').value = "";
         }
     }).open();
 }
 
-// ======== وظيفة البحث ========
 function search() {
     let v = document.getElementById('search').value.toLowerCase();
     document.querySelectorAll("#body tr").forEach(row => {
@@ -169,36 +153,28 @@ function search() {
     });
 }
 
-// ======== تغيير الحالة (تمت/لم تتم) ========
-function toggle(id, s) {
-    db.collection("inv").doc(id).update({ status: s === "wait" ? "done" : "wait" });
+function confirmToggle(id, currentStatus) {
+    const msg = currentStatus === "wait" ? "هل تريد تأكيد إتمام الطباعة؟" : "هل تريد إعادة الفاتورة لوضع الانتظار؟";
+    if(confirm(msg)) {
+        db.collection("inv").doc(id).update({ status: currentStatus === "wait" ? "done" : "wait" });
+    }
 }
 
-// ======== الحذف ========
+function quickEdit(id, field, oldValue) {
+    let newValue = prompt(`تعديل ${field}:`, oldValue);
+    if(newValue !== null) {
+        let updateData = {};
+        updateData[field] = newValue.trim() || "---";
+        db.collection("inv").doc(id).update(updateData);
+    }
+}
+
 function del(id) {
     if(confirm("هل أنت متأكد من حذف هذه الفاتورة نهائياً؟")) {
         db.collection("inv").doc(id).delete();
     }
 }
 
-// ======== التعديل ========
-function edit(id, oldName, oldNote) {
-    let n = prompt("تعديل اسم العميل:", oldName);
-    if(n === null) return;
-    let nt = prompt("تعديل الملاحظات:", oldNote);
-    db.collection("inv").doc(id).update({ name: n.trim(), note: nt ? nt.trim() : "" });
-}
-
-// ======== تحميل الملف ========
-function downloadFile(url) {
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = "_blank";
-    link.download = "فاتورة_اسبير.pdf";
-    link.click();
-}
-
-// ======== التحديث المباشر من قاعدة البيانات ========
 db.collection("inv").orderBy("created", "desc").onSnapshot(snap => {
     const tbody = document.getElementById('body');
     tbody.innerHTML = "";
@@ -211,18 +187,18 @@ db.collection("inv").orderBy("created", "desc").onSnapshot(snap => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${i++}</td>
-            <td style="font-weight:bold;">${x.name}</td>
-            <td style="color:#636e72;">${x.note || "-"}</td>
+            <td class="editable" onclick="quickEdit('${doc.id}', 'invNum', '${x.invNum}')">${x.invNum || "---"}</td>
+            <td class="editable" onclick="quickEdit('${doc.id}', 'name', '${x.name}')" style="font-weight:bold;">${x.name || "---"}</td>
+            <td class="editable" onclick="quickEdit('${doc.id}', 'note', '${x.note}')" style="color:#636e72;">${x.note || "---"}</td>
             <td>
-                <span class="status ${x.status}" onclick="toggle('${doc.id}','${x.status}')">
+                <span class="status ${x.status}" onclick="confirmToggle('${doc.id}','${x.status}')">
                     ${x.status === "done" ? "<i class='fas fa-check'></i> تمت الطباعة" : "<i class='fas fa-clock'></i> لم تتم"}
                 </span>
             </td>
             <td>${x.created?.toDate ? x.created.toDate().toLocaleDateString('ar-EG') : "-"}</td>
             <td>
                 <button class="ctrl" style="background:var(--success)" onclick="window.open('${x.url}','_blank').print()" title="طباعة"><i class="fas fa-print"></i></button>
-                <button class="ctrl" style="background:var(--blue)" onclick="downloadFile('${x.url}')" title="تحميل"><i class="fas fa-download"></i></button>
-                <button class="ctrl" style="background:#f39c12" onclick="edit('${doc.id}','${x.name}','${x.note}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                <button class="ctrl" style="background:var(--blue)" onclick="window.open('${x.url}','_blank')" title="فتح"><i class="fas fa-external-link-alt"></i></button>
                 <button class="ctrl" style="background:var(--danger)" onclick="del('${doc.id}')" title="حذف"><i class="fas fa-trash"></i></button>
             </td>
         `;
