@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة فواتير الشركة - النسخة الاحترافية</title>
+
+    <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4834d4;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #eb4d4b;
+            --bg: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: var(--bg);
+            margin: 0; padding: 20px; color: #2d3436;
+        }
+
+        .dashboard {
+            max-width: 1150px; margin: auto;
+            background: white; padding: 25px;
+            border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-top: 10px solid var(--primary);
+        }
+
+        /* الإحصائيات */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card {
+            padding: 20px; border-radius: 15px; text-align: center; color: white;
+            transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .total-card { background: linear-gradient(135deg, #686de0, #4834d4); }
+        .done-card { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .wait-card { background: linear-gradient(135deg, #f0932b, #d35400); }
+        .stat-val { font-size: 35px; font-weight: bold; display: block; }
+
+        /* مدخلات الشركة */
+        .input-panel {
+            background: #f9f9ff; padding: 20px; border-radius: 15px;
+            display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px;
+            margin-bottom: 25px; border: 1px solid #e1e1f5;
+        }
+        input { padding: 12px; border: 2px solid #ddd; border-radius: 10px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); }
+        
+        .btn-main {
+            background: var(--primary); color: white; border: none;
+            padding: 12px 25px; border-radius: 10px; cursor: pointer;
+            font-weight: bold; font-size: 16px;
+        }
+
+        /* الجدول */
+        .table-container { overflow-x: auto; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: #f8f9fc; padding: 15px; text-align: right; color: #4b4b4b; font-size: 14px; border-bottom: 2px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #f1f2f6; vertical-align: middle; }
+        tr:hover { background-color: #f9f9ff; }
+
+        /* الأزرار والحالات */
+        .status-badge {
+            padding: 6px 12px; border-radius: 20px; font-size: 12px;
+            font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .status-waiting { background: #fff5f5; color: var(--danger); border: 1px solid #ffcccc; }
+        .status-done { background: #f0fff4; color: var(--success); border: 1px solid #c6f6d5; }
+
+        .action-btn {
+            width: 35px; height: 35px; border-radius: 8px; border: none;
+            cursor: pointer; margin-left: 3px; transition: 0.2s; color: white;
+        }
+        .btn-print { background: #2ecc71; }
+        .btn-view { background: #3498db; }
+        .btn-edit { background: #f1c40f; }
+        .btn-delete { background: #e74c3c; }
+        .action-btn:hover { transform: scale(1.1); opacity: 0.9; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="dashboard">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h2 style="margin:0;"><i class="fas fa-file-invoice" style="color:var(--primary)"></i> أرشيف فواتير الشركة</h2>
+        <div id="live-clock" style="font-weight: bold; color: var(--primary); font-size: 18px;"></div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card total-card"><span>إجمالي اليوم</span><span class="stat-val" id="total-stat">0</span></div>
+        <div class="stat-card done-card"><span>تمت الطباعة</span><span class="stat-val" id="done-stat">0</span></div>
+        <div class="stat-card wait-card"><span>قيد الانتظار</span><span class="stat-val" id="wait-stat">0</span></div>
+    </div>
+
+    <div class="input-panel">
+        <input type="text" id="client" placeholder="اسم العميل المستلم">
+        <input type="text" id="note" placeholder="ملاحظات العمل">
+        <button class="btn-main" onclick="uploadInvoice()"><i class="fas fa-cloud-upload-alt"></i> رفع PDF</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>العميل</th>
+                    <th>الملاحظات</th>
+                    <th>الحالة</th>
+                    <th>معاينة وطباعة</th>
+                    <th>التحكم</th>
+                </tr>
+            </thead>
+            <tbody id="invoice-list"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// إعدادات Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBs3OTie7SSJzqWQKgOjUA91BkEZ1919IQ",
+  authDomain: "pdfkk-33ecc.firebaseapp.com",
+  projectId: "pdfkk-33ecc",
+  storageBucket: "pdfkk-33ecc.firebasestorage.app",
+  messagingSenderId: "47702614261",
+  appId: "1:47702614261:web:890268ac5c97124d36a5bc"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const clientStack = filestack.init("AnCRzgItUSXu9tSz5Apfjz");
+
+// الساعة
+setInterval(() => { document.getElementById('live-clock').innerText = new Date().toLocaleTimeString('ar-EG'); }, 1000);
+
+// الرفع
+function uploadInvoice() {
+    const name = document.getElementById('client').value;
+    const note = document.getElementById('note').value;
+    if (!name) return alert("يرجى إدخال اسم العميل");
+
+    clientStack.picker({
+        accept: ['.pdf'],
+        onFileUploadFinished: async (file) => {
+            await db.collection("invoices").add({
+                name: name,
+                note: note,
+                url: file.url,
+                status: "waiting",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('client').value = "";
+            document.getElementById('note').value = "";
+        }
+    }).open();
+}
+
+// تغيير الحالة
+function toggleStatus(id, current) {
+    db.collection("invoices").doc(id).update({ status: current === "waiting" ? "done" : "waiting" });
+}
+
+// الطباعة والمعاينة
+function printPDF(url) {
+    const printWin = window.open(url, '_blank');
+    printWin.focus();
+    // ملاحظة: الطباعة التلقائية تعتمد على إعدادات المتصفح للملفات الخارجية
+}
+
+// الحذف والتعديل
+function deleteRow(id) { if(confirm("حذف الفاتورة؟")) db.collection("invoices").doc(id).delete(); }
+function editRow(id, name, note) {
+    const nName = prompt("تعديل الاسم:", name);
+    const nNote = prompt("تعديل الملاحظات:", note);
+    if(nName) db.collection("invoices").doc(id).update({ name: nName, note: nNote });
+}
+
+// الاستماع المباشر
+db.collection("invoices").orderBy("createdAt", "desc").onSnapshot(snap => {
+    const list = document.getElementById('invoice-list');
+    list.innerHTML = "";
+    let done = 0;
+
+    snap.forEach(doc => {
+        const inv = doc.data();
+        if(inv.status === 'done') done++;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="font-weight:bold;">${inv.name}</td>
+            <td>${inv.note || "-"}</td>
+            <td>
+                <span class="status-badge ${inv.status === 'done' ? 'status-done' : 'status-waiting'}" 
+                onclick="toggleStatus('${doc.id}','${inv.status}')">
+                    <i class="fas ${inv.status === 'done' ? 'fa-check' : 'fa-clock'}"></i>
+                    ${inv.status === 'done' ? 'تمت' : 'انتظار'}
+                </span>
+            </td>
+            <td>
+                <button class="action-btn btn-view" onclick="window.open('${inv.url}','_blank')" title="معاينة"><i class="fas fa-eye"></i></button>
+                <button class="action-btn btn-print" onclick="printPDF('${inv.url}')" title="طباعة"><i class="fas fa-print"></i></button>
+            </td>
+            <td>
+                <button class="action-btn btn-edit" onclick="editRow('${doc.id}','${inv.name}','${inv.note}')"><i class="fas fa-pen"></i></button>
+                <button class="action-btn btn-delete" onclick="deleteRow('${doc.id}')"><i class="fas fa-trash"></i></button>
+            </td>
+        `;
+        list.appendChild(row);
+    });
+
+    document.getElementById('total-stat').innerText = snap.size;
+    document.getElementById('done-stat').innerText = done;
+    document.getElementById('wait-stat').innerText = snap.size - done;
+});
+</script>
+</body>
+</html>
