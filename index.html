@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام إدارة فواتير الاسبيرات</title>
 
+<!-- مكتبات -->
 <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -29,7 +30,7 @@ input{padding:10px;border-radius:8px;border:1px solid #ddd;flex:1}
 .add{background:var(--accent)}
 .printall{background:var(--primary)}
 
-table{width:100%;border-collapse:collapse}
+table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{padding:10px;border-bottom:1px solid #eee;text-align:right}
 .status{padding:5px 10px;border-radius:20px;cursor:pointer}
 .done{background:#55efc4}
@@ -83,114 +84,128 @@ th,td{padding:10px;border-bottom:1px solid #eee;text-align:right}
 </div>
 
 <script>
-// Firebase
+// ======== تعريف المتغيرات ========
+const client = document.getElementById('client');
+const noteInput = document.getElementById('note');
+const searchInput = document.getElementById('search');
+const body = document.getElementById('body');
+const total = document.getElementById('total');
+const done = document.getElementById('done');
+const wait = document.getElementById('wait');
+
+// ======== إعداد Firebase ========
 const firebaseConfig = {
-apiKey:"AIzaSyBs3...",
-authDomain:"pdfkk-33ecc.firebaseapp.com",
-projectId:"pdfkk-33ecc"
+    apiKey:"ضع_مفتاح_Firebase_هنا",
+    authDomain:"pdfkk-33ecc.firebaseapp.com",
+    projectId:"pdfkk-33ecc",
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const stack = filestack.init("AnCRzgItUSXu9tSz5Apfjz");
+// ======== إعداد Filestack ========
+const stack = filestack.init("ضع_مفتاح_Filestack_هنا");
 
-// ساعة
-setInterval(()=>{clock.innerText=new Date().toLocaleTimeString()},1000);
+// ======== ساعة حية ========
+setInterval(()=>{document.getElementById('clock').innerText=new Date().toLocaleTimeString()},1000);
 
-// رفع
+// ======== دالة رفع الملفات ========
 function upload(){
-let name=client.value.trim();
-let note=noteInput.value.trim();
+    let name = client.value.trim();
+    let note = noteInput.value.trim();
 
-if(!name) return alert("اكتب اسم العميل");
+    if(!name) return alert("اكتب اسم العميل");
 
-document.body.style.opacity="0.5";
+    document.body.style.opacity="0.5";
 
-stack.picker({
-accept:['.pdf'],
-onFileUploadFinished:async(f)=>{
-await db.collection("inv").add({
-name, note, url:f.url, status:"wait",
-created:new Date()
-});
-client.value=""; noteInput.value="";
-document.body.style.opacity="1";
-alert("تم الرفع ✅");
+    stack.picker({
+        accept:['.pdf'],
+        onFileUploadFinished: async(f)=>{
+            await db.collection("inv").add({
+                name,
+                note,
+                url:f.url,
+                status:"wait",
+                created:new Date()
+            });
+            client.value = "";
+            noteInput.value = "";
+            document.body.style.opacity="1";
+            alert("تم الرفع ✅");
+        }
+    }).open();
 }
-}).open();
-}
 
-// بحث
+// ======== بحث سريع ========
 function search(){
-let v=searchInput.value.toLowerCase();
-document.querySelectorAll("tbody tr").forEach(r=>{
-r.style.display=r.innerText.toLowerCase().includes(v)?"":"none";
-});
+    let v = searchInput.value.toLowerCase();
+    document.querySelectorAll("tbody tr").forEach(r=>{
+        r.style.display = r.innerText.toLowerCase().includes(v)?"":"none";
+    });
 }
 
-// طباعة ملف
+// ======== طباعة ملف ========
 function printFile(url){
-let w=window.open(url);
-w.onload=()=>setTimeout(()=>w.print(),500);
+    const w = window.open(url);
+    w.onload = ()=>setTimeout(()=>w.print(),500);
 }
 
-// تحميل
+// ======== تحميل الملف ========
 function download(url){
-let a=document.createElement("a");
-a.href=url;
-a.download="file.pdf";
-a.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "file.pdf";
+    a.click();
 }
 
-// تغيير الحالة
+// ======== تغيير الحالة ========
 function toggle(id,s){
-db.collection("inv").doc(id).update({status:s=="wait"?"done":"wait"});
+    db.collection("inv").doc(id).update({status:s=="wait"?"done":"wait"});
 }
 
-// حذف
+// ======== حذف ========
 function del(id){
-if(confirm("حذف؟")) db.collection("inv").doc(id).delete();
+    if(confirm("هل تريد حذف الفاتورة؟")) db.collection("inv").doc(id).delete();
 }
 
-// تعديل
+// ======== تعديل ========
 function edit(id,n,nt){
-let nn=prompt("اسم",n);
-if(nn==null)return;
-let nnt=prompt("ملاحظات",nt);
-db.collection("inv").doc(id).update({name:nn,note:nnt});
+    let nn = prompt("تعديل الاسم:", n);
+    if(nn===null) return;
+    let nnt = prompt("تعديل الملاحظات:", nt);
+    db.collection("inv").doc(id).update({name:nn.trim(), note:nnt? nnt.trim() : ""});
 }
 
-// عرض البيانات
-db.collection("inv").orderBy("created","desc").onSnapshot(s=>{
-body.innerHTML="";
-let d=0,i=1;
+// ======== عرض البيانات مباشرة ========
+db.collection("inv").orderBy("created","desc").onSnapshot(snap=>{
+    body.innerHTML = "";
+    let d=0, i=1;
 
-s.forEach(doc=>{
-let x=doc.data();
-if(x.status=="done")d++;
+    snap.forEach(doc=>{
+        let x = doc.data();
+        if(x.status=="done") d++;
 
-body.innerHTML+=`
-<tr>
-<td>${i++}</td>
-<td>${x.name}</td>
-<td>${x.note||"-"}</td>
-<td><span class="status ${x.status}" onclick="toggle('${doc.id}','${x.status}')">
-${x.status=="done"?"تمت":"لم تتم"}
-</span></td>
-<td>${x.created?.toDate?x.created.toDate().toLocaleDateString():"-"}</td>
-<td>
-<button class="ctrl" style="background:green" onclick="printFile('${x.url}')">🖨️</button>
-<button class="ctrl" style="background:orange" onclick="download('${x.url}')">⬇️</button>
-<button class="ctrl" style="background:blue" onclick="edit('${doc.id}','${x.name}','${x.note}')">✏️</button>
-<button class="ctrl" style="background:red" onclick="del('${doc.id}')">🗑️</button>
-</td>
-</tr>
-`;
-});
+        body.innerHTML += `
+        <tr>
+        <td>${i++}</td>
+        <td>${x.name}</td>
+        <td>${x.note||"-"}</td>
+        <td><span class="status ${x.status}" onclick="toggle('${doc.id}','${x.status}')">
+        ${x.status=="done"?"تمت":"لم تتم"}
+        </span></td>
+        <td>${x.created?.toDate? x.created.toDate().toLocaleDateString() : "-"}</td>
+        <td>
+        <button class="ctrl" style="background:green" onclick="printFile('${x.url}')">🖨️</button>
+        <button class="ctrl" style="background:orange" onclick="download('${x.url}')">⬇️</button>
+        <button class="ctrl" style="background:blue" onclick="edit('${doc.id}','${x.name}','${x.note}')">✏️</button>
+        <button class="ctrl" style="background:red" onclick="del('${doc.id}')">🗑️</button>
+        </td>
+        </tr>
+        `;
+    });
 
-total.innerText=s.size;
-done.innerText=d;
-wait.innerText=s.size-d;
+    total.innerText = snap.size;
+    done.innerText = d;
+    wait.innerText = snap.size - d;
 });
 </script>
 
