@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام إدارة فواتير الاسبيرات</title>
+<title>نظام إدارة فواتير الاسبيرات | الاحترافي</title>
 
-<!-- مكتبات -->
 <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -13,199 +12,226 @@
 
 <style>
 :root {
-    --primary:#2d3436;
-    --accent:#e67e22;
-    --success:#27ae60;
-    --danger:#d63031;
-    --light:#f5f6fa;
+    --primary: #2d3436;
+    --accent: #e67e22;
+    --success: #27ae60;
+    --danger: #d63031;
+    --light: #f5f6fa;
+    --blue: #0984e3;
 }
-body {font-family:Tahoma;background:var(--light);margin:0;padding:20px;}
-.app {max-width:1200px;margin:auto;background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.1);}
-.header {background:var(--primary);color:#fff;padding:20px;display:flex;justify-content:space-between;}
-.stats{display:flex;gap:10px;padding:15px}
-.stat{flex:1;text-align:center;border:1px solid #eee;padding:10px;border-radius:10px}
-.tools{padding:15px;display:flex;flex-wrap:wrap;gap:10px;background:#fafafa}
-input{padding:10px;border-radius:8px;border:1px solid #ddd;flex:1}
-.btn{padding:10px 15px;border:none;border-radius:8px;color:#fff;cursor:pointer}
-.add{background:var(--accent)}
-.printall{background:var(--primary)}
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--light); margin: 0; padding: 20px; color: #2d3436; }
 
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{padding:10px;border-bottom:1px solid #eee;text-align:right}
-.status{padding:5px 10px;border-radius:20px;cursor:pointer}
-.done{background:#55efc4}
-.wait{background:#ffeaa7}
+/* تصميم الكارد الرئيسي */
+.app { max-width: 1200px; margin: auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 8px solid var(--accent); }
 
-.ctrl{padding:5px 8px;border:none;color:#fff;border-radius:5px;cursor:pointer}
+/* الهيدر */
+.header { background: var(--primary); color: #fff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+#clock { font-weight: bold; color: var(--accent); font-size: 1.1em; }
 
-@media print{
-.tools,.header,.stats,.ctrl,.status{display:none}
+/* الإحصائيات */
+.stats { display: flex; gap: 15px; padding: 20px; background: #fff; }
+.stat { flex: 1; text-align: center; border: 1px solid #edf2f7; padding: 15px; border-radius: 15px; transition: 0.3s; }
+.stat:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+.stat b { font-size: 1.8em; display: block; margin-top: 5px; }
+
+/* منطقة التحكم */
+.tools { padding: 20px; display: flex; flex-wrap: wrap; gap: 12px; background: #fafafa; border-bottom: 1px solid #eee; }
+input { padding: 12px; border-radius: 10px; border: 1.5px solid #dfe6e9; flex: 1; outline: none; transition: 0.3s; }
+input:focus { border-color: var(--accent); }
+
+.btn { padding: 12px 25px; border: none; border-radius: 10px; color: #fff; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+.add { background: var(--accent); }
+.printall { background: var(--primary); }
+.btn:hover { opacity: 0.9; transform: scale(1.02); }
+
+/* الجدول */
+.table-container { padding: 10px 20px 30px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 800px; }
+th { padding: 15px; background: #f8f9fa; color: #636e72; font-size: 0.9em; text-transform: uppercase; border-bottom: 2px solid #eee; text-align: right; }
+td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
+tr:hover { background: #f9f9ff; }
+
+/* الحالات */
+.status { padding: 6px 15px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: bold; display: inline-block; }
+.done { background: #e3faf3; color: var(--success); }
+.wait { background: #fff5eb; color: var(--accent); }
+
+/* أزرار التحكم الجانبية */
+.ctrl { padding: 8px; border: none; color: #fff; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; margin: 2px; }
+.ctrl:hover { transform: scale(1.1); }
+
+/* تنسيق الطباعة */
+@media print {
+    .tools, .header, .stats, .ctrl, .status, th:last-child, td:last-child { display: none !important; }
+    body { padding: 0; background: #fff; }
+    .app { box-shadow: none; border: none; width: 100%; }
+    table { border: 1px solid #eee; }
+    .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
 }
+.print-header { display: none; }
 </style>
 </head>
 
 <body>
 
 <div class="app">
-<div class="header">
-<h2>📦 شركة الاسبيرات</h2>
-<div id="clock"></div>
-</div>
+    <div class="header">
+        <h2><i class="fas fa-tools"></i> نظام فواتير شركة الاسبيرات</h2>
+        <div id="clock"></div>
+    </div>
 
-<div class="stats">
-<div class="stat">الإجمالي <b id="total">0</b></div>
-<div class="stat" style="color:green">تمت <b id="done">0</b></div>
-<div class="stat" style="color:red">لم تتم <b id="wait">0</b></div>
-</div>
+    <div class="stats">
+        <div class="stat">إجمالي الفواتير <b id="total">0</b></div>
+        <div class="stat" style="color:var(--success)">تمت الطباعة <b id="done">0</b></div>
+        <div class="stat" style="color:var(--danger)">لم تتم <b id="wait">0</b></div>
+    </div>
 
-<div class="tools">
-<input id="client" placeholder="اسم العميل">
-<input id="note" placeholder="ملاحظات">
-<button class="btn add" onclick="upload()">➕ إضافة</button>
+    <div class="tools">
+        <input id="client" placeholder="اسم العميل المستلم">
+        <input id="note" placeholder="ملاحظات القطعة / الاسبير">
+        <button class="btn add" onclick="upload()"><i class="fas fa-plus-circle"></i> إضافة فاتورة</button>
 
-<input id="search" placeholder="بحث..." onkeyup="search()">
-<button class="btn printall" onclick="window.print()">🖨️ طباعة الكل</button>
-</div>
+        <div style="flex-basis: 100%; height: 0; margin: 0;"></div> <input id="search" placeholder="بحث سريع في السجل..." onkeyup="search()">
+        <button class="btn printall" onclick="window.print()"><i class="fas fa-print"></i> طباعة السجل بالكامل</button>
+    </div>
 
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>العميل</th>
-<th>ملاحظات</th>
-<th>الحالة</th>
-<th>التاريخ</th>
-<th>تحكم</th>
-</tr>
-</thead>
-<tbody id="body"></tbody>
-</table>
+    <div class="print-header">
+        <h1>تقرير فواتير شركة الاسبيرات</h1>
+        <p>تاريخ استخراج التقرير: <span id="reportDate"></span></p>
+    </div>
 
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>العميل</th>
+                    <th>الملاحظات</th>
+                    <th>الحالة</th>
+                    <th>التاريخ</th>
+                    <th>خيارات الإدارة</th>
+                </tr>
+            </thead>
+            <tbody id="body"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-// ======== تعريف المتغيرات ========
-const client = document.getElementById('client');
-const noteInput = document.getElementById('note');
-const searchInput = document.getElementById('search');
-const body = document.getElementById('body');
-const total = document.getElementById('total');
-const done = document.getElementById('done');
-const wait = document.getElementById('wait');
+// ======== إعدادات الأجهزة والوقت ========
+setInterval(() => {
+    const now = new Date();
+    document.getElementById('clock').innerText = now.toLocaleTimeString('ar-EG');
+    document.getElementById('reportDate').innerText = now.toLocaleDateString('ar-EG');
+}, 1000);
 
-// ======== إعداد Firebase ========
+// ======== إعداد Firebase (ضع بياناتك هنا) ========
 const firebaseConfig = {
-    apiKey:"ضع_مفتاح_Firebase_هنا",
-    authDomain:"pdfkk-33ecc.firebaseapp.com",
-    projectId:"pdfkk-33ecc",
+    apiKey: "AIzaSyBs3OTie7SSJzqWQKgOjUA91BkEZ1919IQ",
+    authDomain: "pdfkk-33ecc.firebaseapp.com",
+    projectId: "pdfkk-33ecc",
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ======== إعداد Filestack ========
-const stack = filestack.init("ضع_مفتاح_Filestack_هنا");
+// ======== إعداد Filestack (ضع مفتاحك هنا) ========
+const stack = filestack.init("AnCRzgItUSXu9tSz5Apfjz");
 
-// ======== ساعة حية ========
-setInterval(()=>{document.getElementById('clock').innerText=new Date().toLocaleTimeString()},1000);
+// ======== وظيفة الرفع ========
+function upload() {
+    let name = document.getElementById('client').value.trim();
+    let note = document.getElementById('note').value.trim();
 
-// ======== دالة رفع الملفات ========
-function upload(){
-    let name = client.value.trim();
-    let note = noteInput.value.trim();
-
-    if(!name) return alert("اكتب اسم العميل");
-
-    document.body.style.opacity="0.5";
+    if(!name) return alert("أدخل اسم العميل أولاً");
 
     stack.picker({
-        accept:['.pdf'],
-        onFileUploadFinished: async(f)=>{
+        accept: ['.pdf'],
+        displayMode: 'overlay',
+        onFileUploadFinished: async (file) => {
             await db.collection("inv").add({
-                name,
-                note,
-                url:f.url,
-                status:"wait",
-                created:new Date()
+                name: name,
+                note: note,
+                url: file.url,
+                status: "wait",
+                created: firebase.firestore.FieldValue.serverTimestamp()
             });
-            client.value = "";
-            noteInput.value = "";
-            document.body.style.opacity="1";
-            alert("تم الرفع ✅");
+            document.getElementById('client').value = "";
+            document.getElementById('note').value = "";
         }
     }).open();
 }
 
-// ======== بحث سريع ========
-function search(){
-    let v = searchInput.value.toLowerCase();
-    document.querySelectorAll("tbody tr").forEach(r=>{
-        r.style.display = r.innerText.toLowerCase().includes(v)?"":"none";
+// ======== وظيفة البحث ========
+function search() {
+    let v = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll("#body tr").forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(v) ? "" : "none";
     });
 }
 
-// ======== طباعة ملف ========
-function printFile(url){
-    const w = window.open(url);
-    w.onload = ()=>setTimeout(()=>w.print(),500);
+// ======== تغيير الحالة (تمت/لم تتم) ========
+function toggle(id, s) {
+    db.collection("inv").doc(id).update({ status: s === "wait" ? "done" : "wait" });
+}
+
+// ======== الحذف ========
+function del(id) {
+    if(confirm("هل أنت متأكد من حذف هذه الفاتورة نهائياً؟")) {
+        db.collection("inv").doc(id).delete();
+    }
+}
+
+// ======== التعديل ========
+function edit(id, oldName, oldNote) {
+    let n = prompt("تعديل اسم العميل:", oldName);
+    if(n === null) return;
+    let nt = prompt("تعديل الملاحظات:", oldNote);
+    db.collection("inv").doc(id).update({ name: n.trim(), note: nt ? nt.trim() : "" });
 }
 
 // ======== تحميل الملف ========
-function download(url){
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "file.pdf";
-    a.click();
+function downloadFile(url) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = "_blank";
+    link.download = "فاتورة_اسبير.pdf";
+    link.click();
 }
 
-// ======== تغيير الحالة ========
-function toggle(id,s){
-    db.collection("inv").doc(id).update({status:s=="wait"?"done":"wait"});
-}
+// ======== التحديث المباشر من قاعدة البيانات ========
+db.collection("inv").orderBy("created", "desc").onSnapshot(snap => {
+    const tbody = document.getElementById('body');
+    tbody.innerHTML = "";
+    let d = 0, i = 1;
 
-// ======== حذف ========
-function del(id){
-    if(confirm("هل تريد حذف الفاتورة؟")) db.collection("inv").doc(id).delete();
-}
-
-// ======== تعديل ========
-function edit(id,n,nt){
-    let nn = prompt("تعديل الاسم:", n);
-    if(nn===null) return;
-    let nnt = prompt("تعديل الملاحظات:", nt);
-    db.collection("inv").doc(id).update({name:nn.trim(), note:nnt? nnt.trim() : ""});
-}
-
-// ======== عرض البيانات مباشرة ========
-db.collection("inv").orderBy("created","desc").onSnapshot(snap=>{
-    body.innerHTML = "";
-    let d=0, i=1;
-
-    snap.forEach(doc=>{
+    snap.forEach(doc => {
         let x = doc.data();
-        if(x.status=="done") d++;
+        if(x.status === "done") d++;
 
-        body.innerHTML += `
-        <tr>
-        <td>${i++}</td>
-        <td>${x.name}</td>
-        <td>${x.note||"-"}</td>
-        <td><span class="status ${x.status}" onclick="toggle('${doc.id}','${x.status}')">
-        ${x.status=="done"?"تمت":"لم تتم"}
-        </span></td>
-        <td>${x.created?.toDate? x.created.toDate().toLocaleDateString() : "-"}</td>
-        <td>
-        <button class="ctrl" style="background:green" onclick="printFile('${x.url}')">🖨️</button>
-        <button class="ctrl" style="background:orange" onclick="download('${x.url}')">⬇️</button>
-        <button class="ctrl" style="background:blue" onclick="edit('${doc.id}','${x.name}','${x.note}')">✏️</button>
-        <button class="ctrl" style="background:red" onclick="del('${doc.id}')">🗑️</button>
-        </td>
-        </tr>
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${i++}</td>
+            <td style="font-weight:bold;">${x.name}</td>
+            <td style="color:#636e72;">${x.note || "-"}</td>
+            <td>
+                <span class="status ${x.status}" onclick="toggle('${doc.id}','${x.status}')">
+                    ${x.status === "done" ? "<i class='fas fa-check'></i> تمت الطباعة" : "<i class='fas fa-clock'></i> لم تتم"}
+                </span>
+            </td>
+            <td>${x.created?.toDate ? x.created.toDate().toLocaleDateString('ar-EG') : "-"}</td>
+            <td>
+                <button class="ctrl" style="background:var(--success)" onclick="window.open('${x.url}','_blank').print()" title="طباعة"><i class="fas fa-print"></i></button>
+                <button class="ctrl" style="background:var(--blue)" onclick="downloadFile('${x.url}')" title="تحميل"><i class="fas fa-download"></i></button>
+                <button class="ctrl" style="background:#f39c12" onclick="edit('${doc.id}','${x.name}','${x.note}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                <button class="ctrl" style="background:var(--danger)" onclick="del('${doc.id}')" title="حذف"><i class="fas fa-trash"></i></button>
+            </td>
         `;
+        tbody.appendChild(row);
     });
 
-    total.innerText = snap.size;
-    done.innerText = d;
-    wait.innerText = snap.size - d;
+    document.getElementById('total').innerText = snap.size;
+    document.getElementById('done').innerText = d;
+    document.getElementById('wait').innerText = snap.size - d;
 });
 </script>
 
