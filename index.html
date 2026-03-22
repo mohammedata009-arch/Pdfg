@@ -22,7 +22,9 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--light); ma
 #clock { font-weight: bold; color: var(--accent); font-size: 1.1em; }
 
 .stats { display: flex; gap: 15px; padding: 20px; background: #fff; }
-.stat { flex: 1; text-align: center; border: 1px solid #edf2f7; padding: 15px; border-radius: 15px; }
+.stat { flex: 1; text-align: center; border: 1px solid #edf2f7; padding: 15px; border-radius: 15px; cursor: pointer; transition: 0.3s; position: relative; }
+.stat:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+.stat.active { border: 2px solid var(--accent); background: #fffcf9; }
 .stat b { font-size: 1.8em; display: block; margin-top: 5px; }
 
 .tools { padding: 20px; display: flex; flex-wrap: wrap; gap: 12px; background: #fafafa; border-bottom: 1px solid #eee; }
@@ -38,7 +40,6 @@ table { width: 100%; border-collapse: collapse; min-width: 900px; }
 th { padding: 15px; background: #f8f9fa; color: #636e72; font-size: 0.9em; border-bottom: 2px solid #eee; text-align: right; }
 td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
 
-/* تمييز الحقول القابلة للتعديل */
 .editable { cursor: pointer; border-bottom: 1px dashed #ccc; transition: 0.2s; }
 .editable:hover { background: #fff9f4; color: var(--accent); }
 
@@ -46,7 +47,9 @@ td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
 .done { background: #e3faf3; color: var(--success); }
 .wait { background: #fff5eb; color: var(--accent); }
 
-.ctrl { padding: 8px; border: none; color: #fff; border-radius: 8px; cursor: pointer; margin: 2px; }
+.ctrl { padding: 8px 12px; border: none; color: #fff; border-radius: 8px; cursor: pointer; margin: 2px; font-size: 13px; }
+.print-btn { padding: 10px 20px; font-weight: bold; font-size: 14px; min-width: 150px; text-align: right; }
+.filename-label { display: block; font-size: 10px; opacity: 0.9; margin-top: 2px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
 
 @media print {
     .tools, .header, .stats, .ctrl, .status, th:last-child, td:last-child { display: none !important; }
@@ -67,9 +70,9 @@ td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
     </div>
 
     <div class="stats">
-        <div class="stat">إجمالي الفواتير <b id="total">0</b></div>
-        <div class="stat" style="color:var(--success)">تمت الطباعة <b id="done">0</b></div>
-        <div class="stat" style="color:var(--danger)">لم تتم <b id="wait">0</b></div>
+        <div class="stat active" id="filter-all" onclick="filterData('all')">الكل <b id="total">0</b></div>
+        <div class="stat" id="filter-done" onclick="filterData('done')" style="color:var(--success)">تمت الطباعة <b id="done">0</b></div>
+        <div class="stat" id="filter-wait" onclick="filterData('wait')" style="color:var(--danger)">قيد الانتظار <b id="wait">0</b></div>
     </div>
 
     <div class="tools">
@@ -98,7 +101,7 @@ td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
                     <th>الملاحظات</th>
                     <th>الحالة</th>
                     <th>التاريخ</th>
-                    <th>خيارات</th>
+                    <th>خيارات الملف والطباعة</th>
                 </tr>
             </thead>
             <tbody id="body"></tbody>
@@ -107,6 +110,8 @@ td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
 </div>
 
 <script>
+let currentFilter = 'all';
+
 setInterval(() => {
     const now = new Date();
     document.getElementById('clock').innerText = now.toLocaleTimeString('ar-EG');
@@ -136,6 +141,7 @@ function upload() {
                 name: name || "---",
                 note: note || "---",
                 url: file.url,
+                fileName: file.filename, // حفظ اسم الملف
                 status: "wait",
                 created: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -146,10 +152,40 @@ function upload() {
     }).open();
 }
 
+function replaceFile(id) {
+    stack.picker({
+        accept: ['.pdf'],
+        displayMode: 'overlay',
+        onFileUploadFinished: async (file) => {
+            await db.collection("inv").doc(id).update({
+                url: file.url,
+                fileName: file.filename
+            });
+            alert("تم تحديث الملف بنجاح");
+        }
+    }).open();
+}
+
+function printFile(url, fileName) {
+    if(confirm(`هل أنت متأكد من طباعة الملف: ${fileName}؟`)) {
+        const win = window.open(url, '_blank');
+        win.print();
+    }
+}
+
+function filterData(status) {
+    currentFilter = status;
+    document.querySelectorAll('.stat').forEach(s => s.classList.remove('active'));
+    document.getElementById(`filter-${status}`).classList.add('active');
+    search(); // إعادة تطبيق البحث والفلترة
+}
+
 function search() {
     let v = document.getElementById('search').value.toLowerCase();
     document.querySelectorAll("#body tr").forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(v) ? "" : "none";
+        const matchesSearch = row.innerText.toLowerCase().includes(v);
+        const matchesFilter = currentFilter === 'all' || row.getAttribute('data-status') === currentFilter;
+        row.style.display = (matchesSearch && matchesFilter) ? "" : "none";
     });
 }
 
@@ -185,6 +221,7 @@ db.collection("inv").orderBy("created", "desc").onSnapshot(snap => {
         if(x.status === "done") d++;
 
         const row = document.createElement('tr');
+        row.setAttribute('data-status', x.status);
         row.innerHTML = `
             <td>${i++}</td>
             <td class="editable" onclick="quickEdit('${doc.id}', 'invNum', '${x.invNum}')">${x.invNum || "---"}</td>
@@ -192,13 +229,17 @@ db.collection("inv").orderBy("created", "desc").onSnapshot(snap => {
             <td class="editable" onclick="quickEdit('${doc.id}', 'note', '${x.note}')" style="color:#636e72;">${x.note || "---"}</td>
             <td>
                 <span class="status ${x.status}" onclick="confirmToggle('${doc.id}','${x.status}')">
-                    ${x.status === "done" ? "<i class='fas fa-check'></i> تمت الطباعة" : "<i class='fas fa-clock'></i> لم تتم"}
+                    ${x.status === "done" ? "<i class='fas fa-check'></i> تمت" : "<i class='fas fa-clock'></i> انتظار"}
                 </span>
             </td>
             <td>${x.created?.toDate ? x.created.toDate().toLocaleDateString('ar-EG') : "-"}</td>
-            <td>
-                <button class="ctrl" style="background:var(--success)" onclick="window.open('${x.url}','_blank').print()" title="طباعة"><i class="fas fa-print"></i></button>
-                <button class="ctrl" style="background:var(--blue)" onclick="window.open('${x.url}','_blank')" title="فتح"><i class="fas fa-external-link-alt"></i></button>
+            <td style="display: flex; align-items: center; gap: 5px;">
+                <button class="ctrl print-btn" style="background:var(--success)" onclick="printFile('${x.url}','${x.fileName || 'ملف غير مسمى'}')" title="طباعة">
+                    <i class="fas fa-print"></i> طباعة الفاتورة
+                    <span class="filename-label">${x.fileName || 'بدون اسم'}</span>
+                </button>
+                <button class="ctrl" style="background:var(--blue)" onclick="replaceFile('${doc.id}')" title="استبدال الملف"><i class="fas fa-sync-alt"></i></button>
+                <button class="ctrl" style="background:var(--primary)" onclick="window.open('${x.url}','_blank')" title="فتح"><i class="fas fa-external-link-alt"></i></button>
                 <button class="ctrl" style="background:var(--danger)" onclick="del('${doc.id}')" title="حذف"><i class="fas fa-trash"></i></button>
             </td>
         `;
@@ -208,6 +249,7 @@ db.collection("inv").orderBy("created", "desc").onSnapshot(snap => {
     document.getElementById('total').innerText = snap.size;
     document.getElementById('done').innerText = d;
     document.getElementById('wait').innerText = snap.size - d;
+    search(); // تحديث العرض حسب الفلتر الحالي
 });
 </script>
 
