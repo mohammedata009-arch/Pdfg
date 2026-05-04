@@ -1,256 +1,235 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام إدارة فواتير الاسبيرات | الاحترافي المطور</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار تحديد مستوى اللغة الإنجليزية - الأستاذ محمد طه</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --accent: #e67e22;
+            --dark: #2d3436;
+            --light: #f4f7f6;
+            --white: #ffffff;
+            --wa-color: #25D366;
+        }
 
-<script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--dark);
+            padding: 15px;
+        }
 
-<style>
-:root {
-    --primary: #2d3436; --accent: #e67e22; --success: #27ae60;
-    --danger: #d63031; --light: #f5f6fa; --blue: #0984e3;
-}
-body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--light); margin: 0; padding: 20px; color: #2d3436; }
+        #main-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            text-align: center;
+        }
 
-.app { max-width: 1250px; margin: auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 8px solid var(--accent); }
-.header { background: var(--primary); color: #fff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
-#clock { font-weight: bold; color: var(--accent); font-size: 1.1em; }
+        h1 { color: var(--primary); font-size: 1.6rem; margin-bottom: 10px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 20px; }
 
-.stats { display: flex; gap: 15px; padding: 20px; background: #fff; }
-.stat { flex: 1; text-align: center; border: 1px solid #edf2f7; padding: 15px; border-radius: 15px; cursor: pointer; transition: 0.3s; position: relative; }
-.stat:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-.stat.active { border: 2px solid var(--accent); background: #fffcf9; }
-.stat b { font-size: 1.8em; display: block; margin-top: 5px; }
+        .progress-container {
+            background: var(--light);
+            height: 8px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+        }
+        #progress-bar {
+            background: var(--secondary);
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s;
+        }
 
-.tools { padding: 20px; display: flex; flex-wrap: wrap; gap: 12px; background: #fafafa; border-bottom: 1px solid #eee; }
-input { padding: 12px; border-radius: 10px; border: 1.5px solid #dfe6e9; flex: 1; outline: none; }
-input:focus { border-color: var(--accent); }
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            direction: ltr;
+        }
 
-.btn { padding: 12px 25px; border: none; border-radius: 10px; color: #fff; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-.add { background: var(--accent); }
-.printall { background: var(--primary); }
+        .options-grid { display: grid; gap: 10px; direction: ltr; }
+        
+        .opt-btn {
+            padding: 14px;
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            background: var(--white);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.2s;
+            font-weight: 500;
+        }
 
-.table-container { padding: 10px 20px 30px; overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; min-width: 900px; }
-th { padding: 15px; background: #f8f9fa; color: #636e72; font-size: 0.9em; border-bottom: 2px solid #eee; text-align: right; }
-td { padding: 15px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
+        .opt-btn:hover { background: #f0f0f0; border-color: var(--primary); }
+        .correct { background: var(--secondary) !important; color: white; border-color: var(--secondary) !important; }
+        .wrong { background: #e74c3c !important; color: white; border-color: #e74c3c !important; }
 
-.editable { cursor: pointer; border-bottom: 1px dashed #ccc; transition: 0.2s; }
-.editable:hover { background: #fff9f4; color: var(--accent); }
+        #result-screen { display: none; }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            margin: 15px 0;
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            text-align: center;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
 
-.status { padding: 6px 15px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: bold; display: inline-block; }
-.done { background: #e3faf3; color: var(--success); }
-.wait { background: #fff5eb; color: var(--accent); }
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            font-size: 1.1rem;
+        }
 
-.ctrl { padding: 8px 12px; border: none; color: #fff; border-radius: 8px; cursor: pointer; margin: 2px; font-size: 13px; }
-.print-btn { padding: 10px 20px; font-weight: bold; font-size: 14px; min-width: 150px; text-align: right; }
-.filename-label { display: block; font-size: 10px; opacity: 0.9; margin-top: 2px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
-
-@media print {
-    .tools, .header, .stats, .ctrl, .status, th:last-child, td:last-child { display: none !important; }
-    body { padding: 0; background: #fff; }
-    .app { box-shadow: none; border: none; width: 100%; }
-    .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
-}
-.print-header { display: none; }
-</style>
+        .level-tag {
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.4rem;
+            margin: 15px 0;
+            padding: 10px;
+            background: #fff3e0;
+            border-radius: 10px;
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="app">
-    <div class="header">
-        <h2><i class="fas fa-tools"></i> نظام فواتير شركة الاسبيرات</h2>
-        <div id="clock"></div>
+<div id="main-card">
+    <div id="quiz-screen">
+        <h1>English Placement Test</h1>
+        <p class="subtitle">بإشراف الأستاذ محمد طه عطا المنان</p>
+        
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+
+        <div id="question" class="question-text">جاري تحميل السؤال...</div>
+        <div id="options" class="options-grid"></div>
     </div>
 
-    <div class="stats">
-        <div class="stat active" id="filter-all" onclick="filterData('all')">الكل <b id="total">0</b></div>
-        <div class="stat" id="filter-done" onclick="filterData('done')" style="color:var(--success)">تمت الطباعة <b id="done">0</b></div>
-        <div class="stat" id="filter-wait" onclick="filterData('wait')" style="color:var(--danger)">قيد الانتظار <b id="wait">0</b></div>
-    </div>
-
-    <div class="tools">
-        <input id="invNum" placeholder="رقم الفاتورة">
-        <input id="client" placeholder="اسم العميل المستلم">
-        <input id="note" placeholder="ملاحظات القطعة / الاسبير">
-        <button class="btn add" onclick="upload()"><i class="fas fa-plus-circle"></i> إضافة ورفع</button>
-
-        <div style="flex-basis: 100%; height: 0; margin: 0;"></div> 
-        <input id="search" placeholder="بحث سريع في السجل..." onkeyup="search()">
-        <button class="btn printall" onclick="window.print()"><i class="fas fa-print"></i> طباعة السجل بالكامل</button>
-    </div>
-
-    <div class="print-header">
-        <h1>تقرير فواتير شركة الاسبيرات</h1>
-        <p>تاريخ التقرير: <span id="reportDate"></span></p>
-    </div>
-
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>رقم الفاتورة</th>
-                    <th>العميل</th>
-                    <th>الملاحظات</th>
-                    <th>الحالة</th>
-                    <th>التاريخ</th>
-                    <th>خيارات الملف والطباعة</th>
-                </tr>
-            </thead>
-            <tbody id="body"></tbody>
-        </table>
+    <div id="result-screen">
+        <h2>أحسنتم يا متدربين! النتيجة النهائية:</h2>
+        <div style="font-size: 3rem; font-weight: bold; color: var(--primary);" id="final-score">0</div>
+        <div class="level-tag" id="level-desc">تحديد المستوى...</div>
+        
+        <p>لطفاً اكتبوا أسماءكم الثلاثية لاستلام التقرير</p>
+        <input type="text" id="trainee-name" placeholder="ادخل الاسم هنا">
+        
+        <button class="btn-action" style="background:var(--wa-color);" onclick="sendWA()">
+            إرسال النتيجة للواتساب
+        </button>
     </div>
 </div>
 
+<audio id="s-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+<audio id="s-wrong" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"></audio>
+
 <script>
-let currentFilter = 'all';
+    const quizData = [
+        // المستوى المبتدئ - Beginner
+        { q: "1. ____ name is Ahmed. I am from Sudan.", a: ["My", "Me", "I", "Mine"], c: 0 },
+        { q: "2. They ____ football every Friday.", a: ["plays", "playing", "play", "played"], c: 2 },
+        // المستوى فوق المبتدئ - Elementary
+        { q: "3. Did you ____ the movie last night?", a: ["see", "saw", "seeing", "seen"], c: 0 },
+        { q: "4. This is ____ interesting book I've ever read.", a: ["more", "most", "the most", "the more"], c: 2 },
+        // المستوى المتوسط - Intermediate
+        { q: "5. I ____ my homework when the lights went out.", a: ["do", "was doing", "did", "have done"], c: 1 },
+        { q: "6. She has been working here ____ five years.", a: ["since", "for", "ago", "from"], c: 1 },
+        // المستوى فوق المتوسط - Upper-Intermediate
+        { q: "7. You ____ tell anyone our secret. It's confidential.", a: ["don't have to", "mustn't", "needn't", "won't"], c: 1 },
+        { q: "8. I wish I ____ more time to finish the project.", a: ["have", "had", "will have", "having"], c: 1 },
+        // المستوى المتقدم - Advanced
+        { q: "9. If I ____ about the meeting, I would have attended.", a: ["knew", "had known", "would know", "have known"], c: 1 },
+        { q: "10. ____ the difficult conditions, the team succeeded.", a: ["Despite", "In spite", "Although", "Even though"], c: 0 }
+    ];
 
-setInterval(() => {
-    const now = new Date();
-    document.getElementById('clock').innerText = now.toLocaleTimeString('ar-EG');
-    document.getElementById('reportDate').innerText = now.toLocaleDateString('ar-EG');
-}, 1000);
+    let current = 0;
+    let score = 0;
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBs3OTie7SSJzqWQKgOjUA91BkEZ1919IQ",
-    authDomain: "pdfkk-33ecc.firebaseapp.com",
-    projectId: "pdfkk-33ecc",
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const stack = filestack.init("AnCRzgItUSXu9tSz5Apfjz");
+    function renderQuestion() {
+        if (current >= quizData.length) { showResults(); return; }
+        
+        const q = quizData[current];
+        document.getElementById("question").innerText = q.q;
+        document.getElementById("progress-bar").style.width = ((current / quizData.length) * 100) + "%";
+        
+        const optsDiv = document.getElementById("options");
+        optsDiv.innerHTML = "";
+        
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement("button");
+            btn.className = "opt-btn";
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(i, btn);
+            optsDiv.appendChild(btn);
+        });
+    }
 
-function upload() {
-    let invNum = document.getElementById('invNum').value.trim();
-    let name = document.getElementById('client').value.trim();
-    let note = document.getElementById('note').value.trim();
+    function checkAnswer(idx, btn) {
+        const correct = quizData[current].c;
+        const allBtns = document.querySelectorAll(".opt-btn");
+        allBtns.forEach(b => b.disabled = true);
 
-    stack.picker({
-        accept: ['.pdf'],
-        displayMode: 'overlay',
-        onFileUploadFinished: async (file) => {
-            await db.collection("inv").add({
-                invNum: invNum || "---",
-                name: name || "---",
-                note: note || "---",
-                url: file.url,
-                fileName: file.filename, // حفظ اسم الملف
-                status: "wait",
-                created: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            document.getElementById('invNum').value = "";
-            document.getElementById('client').value = "";
-            document.getElementById('note').value = "";
+        if (idx === correct) {
+            btn.classList.add("correct");
+            document.getElementById("s-correct").play();
+            score++;
+        } else {
+            btn.classList.add("wrong");
+            allBtns[correct].classList.add("correct");
+            document.getElementById("s-wrong").play();
         }
-    }).open();
-}
 
-function replaceFile(id) {
-    stack.picker({
-        accept: ['.pdf'],
-        displayMode: 'overlay',
-        onFileUploadFinished: async (file) => {
-            await db.collection("inv").doc(id).update({
-                url: file.url,
-                fileName: file.filename
-            });
-            alert("تم تحديث الملف بنجاح");
-        }
-    }).open();
-}
-
-function printFile(url, fileName) {
-    if(confirm(`هل أنت متأكد من طباعة الملف: ${fileName}؟`)) {
-        const win = window.open(url, '_blank');
-        win.print();
+        setTimeout(() => {
+            current++;
+            renderQuestion();
+        }, 1000);
     }
-}
 
-function filterData(status) {
-    currentFilter = status;
-    document.querySelectorAll('.stat').forEach(s => s.classList.remove('active'));
-    document.getElementById(`filter-${status}`).classList.add('active');
-    search(); // إعادة تطبيق البحث والفلترة
-}
-
-function search() {
-    let v = document.getElementById('search').value.toLowerCase();
-    document.querySelectorAll("#body tr").forEach(row => {
-        const matchesSearch = row.innerText.toLowerCase().includes(v);
-        const matchesFilter = currentFilter === 'all' || row.getAttribute('data-status') === currentFilter;
-        row.style.display = (matchesSearch && matchesFilter) ? "" : "none";
-    });
-}
-
-function confirmToggle(id, currentStatus) {
-    const msg = currentStatus === "wait" ? "هل تريد تأكيد إتمام الطباعة؟" : "هل تريد إعادة الفاتورة لوضع الانتظار؟";
-    if(confirm(msg)) {
-        db.collection("inv").doc(id).update({ status: currentStatus === "wait" ? "done" : "wait" });
+    function showResults() {
+        document.getElementById("quiz-screen").style.display = "none";
+        document.getElementById("result-screen").style.display = "block";
+        document.getElementById("final-score").innerText = score + " / 10";
+        
+        let level = "";
+        if(score <= 3) level = "المستوى: مبتدئ (Beginner)";
+        else if(score <= 5) level = "المستوى: فوق المبتدئ (Elementary)";
+        else if(score <= 8) level = "المستوى: متوسط (Intermediate)";
+        else level = "المستوى: متقدم (Advanced)";
+        
+        document.getElementById("level-desc").innerText = level;
     }
-}
 
-function quickEdit(id, field, oldValue) {
-    let newValue = prompt(`تعديل ${field}:`, oldValue);
-    if(newValue !== null) {
-        let updateData = {};
-        updateData[field] = newValue.trim() || "---";
-        db.collection("inv").doc(id).update(updateData);
+    function sendWA() {
+        const name = document.getElementById("trainee-name").value;
+        if(!name) { alert("لطفاً اكتبوا أسماءكم يا متدربين"); return; }
+        const level = document.getElementById("level-desc").innerText;
+        const msg = encodeURIComponent(`السلام عليكم أستاذ محمد طه\nأنا المتدرب(ة): ${name}\nأتممت اختبار تحديد المستوى بنجاح.\nالنتيجة: ${score}/10\n${level}`);
+        window.open(`https://wa.me/249999240574?text=${msg}`);
     }
-}
 
-function del(id) {
-    if(confirm("هل أنت متأكد من حذف هذه الفاتورة نهائياً؟")) {
-        db.collection("inv").doc(id).delete();
-    }
-}
-
-db.collection("inv").orderBy("created", "desc").onSnapshot(snap => {
-    const tbody = document.getElementById('body');
-    tbody.innerHTML = "";
-    let d = 0, i = 1;
-
-    snap.forEach(doc => {
-        let x = doc.data();
-        if(x.status === "done") d++;
-
-        const row = document.createElement('tr');
-        row.setAttribute('data-status', x.status);
-        row.innerHTML = `
-            <td>${i++}</td>
-            <td class="editable" onclick="quickEdit('${doc.id}', 'invNum', '${x.invNum}')">${x.invNum || "---"}</td>
-            <td class="editable" onclick="quickEdit('${doc.id}', 'name', '${x.name}')" style="font-weight:bold;">${x.name || "---"}</td>
-            <td class="editable" onclick="quickEdit('${doc.id}', 'note', '${x.note}')" style="color:#636e72;">${x.note || "---"}</td>
-            <td>
-                <span class="status ${x.status}" onclick="confirmToggle('${doc.id}','${x.status}')">
-                    ${x.status === "done" ? "<i class='fas fa-check'></i> تمت" : "<i class='fas fa-clock'></i> انتظار"}
-                </span>
-            </td>
-            <td>${x.created?.toDate ? x.created.toDate().toLocaleDateString('ar-EG') : "-"}</td>
-            <td style="display: flex; align-items: center; gap: 5px;">
-                <button class="ctrl print-btn" style="background:var(--success)" onclick="printFile('${x.url}','${x.fileName || 'ملف غير مسمى'}')" title="طباعة">
-                    <i class="fas fa-print"></i> طباعة الفاتورة
-                    <span class="filename-label">${x.fileName || 'بدون اسم'}</span>
-                </button>
-                <button class="ctrl" style="background:var(--blue)" onclick="replaceFile('${doc.id}')" title="استبدال الملف"><i class="fas fa-sync-alt"></i></button>
-                <button class="ctrl" style="background:var(--primary)" onclick="window.open('${x.url}','_blank')" title="فتح"><i class="fas fa-external-link-alt"></i></button>
-                <button class="ctrl" style="background:var(--danger)" onclick="del('${doc.id}')" title="حذف"><i class="fas fa-trash"></i></button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-
-    document.getElementById('total').innerText = snap.size;
-    document.getElementById('done').innerText = d;
-    document.getElementById('wait').innerText = snap.size - d;
-    search(); // تحديث العرض حسب الفلتر الحالي
-});
+    renderQuestion();
 </script>
 
 </body>
